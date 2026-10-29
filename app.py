@@ -3,6 +3,7 @@ import sqlite3
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+import db
 
 
 
@@ -16,4 +17,7 @@ load_dotenv(inst_path)
 app.config["DATABASE"] = os.environ.get("DATABASE")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
+app.cli.add_command(db.db_init_cli)
 
+if __name__ == "__main__":
+    app.run()
