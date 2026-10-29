@@ -25,7 +25,9 @@ async function login(event) {
 
     catch (error){
         return error.message
-    }};
+    }
+    loginForm.reset()
+    };
 
 async function register(event) {
     event.preventDefault()
@@ -43,9 +45,10 @@ async function register(event) {
         if (!result.ok) {
             throw new Error("no response")
         }
+        const response = result.json()
 
     }
     catch (error) {
         return error.message
     }
-}
+    }
