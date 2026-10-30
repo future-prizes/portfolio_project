@@ -3,7 +3,7 @@ import sqlite3
 from dotenv import load_dotenv
 from pathlib import Path
 import os
-from db import db_connect
+from db import db_connect, db_init_cli
 from flask_bcrypt import bcrypt
 
 app = Flask(__name__, instance_relative_config = True)
@@ -64,7 +64,7 @@ def login():
 
 
 
-app.cli.add_command(db.db_init_cli)
+app.cli.add_command(db_init_cli)
 
 if __name__ == "__main__":
     app.run()
