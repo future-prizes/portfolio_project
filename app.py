@@ -23,32 +23,41 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 @app.route("/login", methods = ["GET", "POST"])
 def login():
     error = None
+    if request.method == "POST":
+        try:
 
-    try:
-        username = request.form.get("username").strip()
-        password = request.form.get("password")
+            username = request.form.get("username")
+            if username and len(username)>0:
+                username = username.strip()
+            else:
+                error ="username is empty"
+            password = request.form.get("password")
 
         
-        conn = db_connect()
-        cursor = conn.cursor()
-        sql = """SELECT username, password_hash FROM users WHERE username = ?"""
-        cursor.execute(sql, (username, ))
-        
-        if username is None:
-            error = "Wrong username"
-        if password is None:
-            error = "Wrong password"
-        elif not (bcrypt.check_password_hash(password), password):
-            error = "Wrong password"
-        if error is None:
-            session.clear()
-            session["user"] = username
+            conn = db_connect()
+            cursor = conn.cursor()
+            sql = """SELECT username, password_hash FROM users WHERE username = ?"""
+            cursor.execute(sql, (username, ))
+            result = cursor.fetchone()
+            conn.close()
+            if result is None:
+                error = "user not found"
+            else :
+                password_hash = result[1]
+                if not (bcrypt.check_password_hash(password_hash, password)):
+                    error = "Wrong password"
+            if error is None:
+                session.clear()
+                session["user"] = username
+                return jsonify(f"Welcome {username}")
+            if error is not None:
+                return jsonify({"error": error}), 400           
+        except Exception as ex:
+            print(ex)
+            return jsonify("Internal error occured"), 500
 
-        conn.commit()
-        conn.close()
-    except:
-        error = "Could not connect to database"
-        return jsonify(error)
+
+
 
 @app.route("/register", methods = ["GET", "POST"])
 def register():
@@ -87,7 +96,8 @@ def show_all():
     
         conn = db_connect()
         cursor = conn.cursor()
-        sql = """SELECT * FROM users"""
+        sql = """SELECT username, password_hash FROM users
+        WHERE username='test'"""
         result = cursor.execute(sql)
         rows = result.fetchall()
 

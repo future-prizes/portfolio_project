@@ -22,11 +22,12 @@ async function login(event) {
         method:"POST",
         body: loginFormData
     })
-    if (!result.ok){
-        throw new Error("no response")
-    }
     const response = await result.json()
+    if (!result.ok){
+        h2.textContent = response.error
     }
+    else {h2.textContent= response
+    }}
 
     catch (error){
         return error.message
@@ -77,6 +78,6 @@ async function showAll(){
         return error.message
     }
 }
-console.log(document.getElementById("loginForm"))
+
 loginForm?.addEventListener("submit", (event) => {login(event)})
 registerForm?.addEventListener("submit", (event) =>{register(event)})
