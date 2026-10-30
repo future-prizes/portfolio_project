@@ -1,24 +1,26 @@
-from flask import Flask, request
+from flask import Flask, request, session, jsonify
 import sqlite3
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 from db import db_connect, db_init_cli
-from flask_bcrypt import bcrypt
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__, instance_relative_config = True)
 
-bcrypt(app)
+bcrypt = Bcrypt(app)
+#config
 
-
-inst_path = os.path.join(app.instance_path, "config.env")
-load_dotenv(inst_path)
-app.config["DATABASE"] = os.environ.get("DATABASE")
+config_path = os.path.join(app.instance_path, "config.env")
+load_dotenv(config_path)
+db_name = os.environ.get("DB_NAME")
+app.config["DB_PATH"] = os.path.join(app.instance_path, db_name)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+
 
 #routes
 
-@app("/login", methods = ["GET, POST"])
+@app.route("/login", methods = ["GET", "POST"])
 def login():
     error = None
 
@@ -48,7 +50,7 @@ def login():
         error = "Could not connect to database"
         return jsonify(error)
 
-@app("/register", methods = ["GET", "POST"])
+@app.route("/register", methods = ["GET", "POST"])
 def register():
     error = None
 
@@ -67,15 +69,35 @@ def register():
 
         sql = """INSERT INTO users (username, email, password_hash)
                 VALUES (?,?,?)"""
-        cursor.execute(sql, (username, email, bcrypt.generate_pass_hash(password).decode("utf-8")))
+        cursor.execute(sql, (username, email, bcrypt.generate_password_hash(password).decode("utf-8")))
 
         conn.commit()
         conn.close()
+        return f"User {username} registered"
+    except Exception as e:
+        return jsonify(e)
+    except sqlite3.Error as e:
+        return jsonify(e)
+
+@app.route("/show-all", methods = ["GET"])
+def show_all():
+    error = None
+    
+    try:
+    
+        conn = db_connect()
+        cursor = conn.cursor()
+        sql = """SELECT * FROM users"""
+        result = cursor.execute(sql)
+        rows = result.fetchall()
+
+        conn.commit()
+        conn.close()
+        print(rows)
+        return jsonify(rows)
     except:
         error = "Could not connect to database"
         return jsonify(error)
-
-
 
 
 
